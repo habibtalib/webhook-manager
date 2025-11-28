@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\DeployNginxConfig;
 use App\Jobs\RequestSslCertificate;
 use App\Models\Website;
+use App\Services\Pm2Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -227,6 +228,78 @@ class WebsiteController extends Controller
         return redirect()
             ->route('websites.show', $website)
             ->with('success', 'Configuration redeploy has been queued. Please wait for the process to complete.');
+    }
+
+    /**
+     * Start PM2 application.
+     */
+    public function pm2Start(Website $website, Pm2Service $pm2Service)
+    {
+        if ($website->project_type !== 'node') {
+            return redirect()
+                ->route('websites.show', $website)
+                ->with('error', 'PM2 control is only available for Node.js projects.');
+        }
+
+        $result = $pm2Service->startApp($website);
+
+        if ($result['success']) {
+            return redirect()
+                ->route('websites.show', $website)
+                ->with('success', $result['message']);
+        }
+
+        return redirect()
+            ->route('websites.show', $website)
+            ->with('error', $result['error']);
+    }
+
+    /**
+     * Stop PM2 application.
+     */
+    public function pm2Stop(Website $website, Pm2Service $pm2Service)
+    {
+        if ($website->project_type !== 'node') {
+            return redirect()
+                ->route('websites.show', $website)
+                ->with('error', 'PM2 control is only available for Node.js projects.');
+        }
+
+        $result = $pm2Service->stopApp($website);
+
+        if ($result['success']) {
+            return redirect()
+                ->route('websites.show', $website)
+                ->with('success', $result['message']);
+        }
+
+        return redirect()
+            ->route('websites.show', $website)
+            ->with('error', $result['error']);
+    }
+
+    /**
+     * Restart PM2 application.
+     */
+    public function pm2Restart(Website $website, Pm2Service $pm2Service)
+    {
+        if ($website->project_type !== 'node') {
+            return redirect()
+                ->route('websites.show', $website)
+                ->with('error', 'PM2 control is only available for Node.js projects.');
+        }
+
+        $result = $pm2Service->restartApp($website);
+
+        if ($result['success']) {
+            return redirect()
+                ->route('websites.show', $website)
+                ->with('success', $result['message']);
+        }
+
+        return redirect()
+            ->route('websites.show', $website)
+            ->with('error', $result['error']);
     }
 
     /**

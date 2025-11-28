@@ -21,6 +21,7 @@ class Website extends Model
         'is_active',
         'nginx_status',
         'ssl_status',
+        'pm2_status',
     ];
 
     protected $casts = [
@@ -83,6 +84,20 @@ class Website extends Model
             'pending' => 'warning',
             'failed' => 'danger',
             'none' => 'secondary',
+            default => 'secondary',
+        };
+    }
+
+    /**
+     * Get the PM2 status badge color
+     */
+    public function getPm2StatusBadgeAttribute(): string
+    {
+        return match($this->pm2_status) {
+            'running' => 'success',
+            'stopped' => 'secondary',
+            'error' => 'danger',
+            'unknown' => 'warning',
             default => 'secondary',
         };
     }

@@ -222,6 +222,179 @@ JS;
     }
 
     /**
+     * Start PM2 application
+     */
+    public function startApp(Website $website): array
+    {
+        try {
+            if ($website->project_type !== 'node') {
+                return [
+                    'success' => false,
+                    'error' => 'Not a Node.js project'
+                ];
+            }
+
+            if ($this->isLocal) {
+                return [
+                    'success' => false,
+                    'error' => 'PM2 control not available in local mode. Use post-deploy script in webhook instead.'
+                ];
+            }
+
+            $appName = str_replace('.', '-', $website->domain);
+            $configPath = "{$this->pm2ConfigPath}/ecosystem.{$appName}.config.js";
+
+            // Try to restart first (if already exists), otherwise start
+            $result = Process::run("pm2 restart {$appName} --update-env 2>/dev/null || pm2 start {$configPath}");
+
+            if ($result->successful()) {
+                Process::run("pm2 save");
+                
+                $website->update(['pm2_status' => 'running']);
+                
+                Log::info('PM2 app started', [
+                    'website_id' => $website->id,
+                    'app_name' => $appName
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Application started successfully'
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $result->errorOutput()
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to start PM2 app', [
+                'website_id' => $website->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Stop PM2 application
+     */
+    public function stopApp(Website $website): array
+    {
+        try {
+            if ($website->project_type !== 'node') {
+                return [
+                    'success' => false,
+                    'error' => 'Not a Node.js project'
+                ];
+            }
+
+            if ($this->isLocal) {
+                return [
+                    'success' => false,
+                    'error' => 'PM2 control not available in local mode'
+                ];
+            }
+
+            $appName = str_replace('.', '-', $website->domain);
+            $result = Process::run("pm2 stop {$appName}");
+
+            if ($result->successful()) {
+                Process::run("pm2 save");
+                
+                $website->update(['pm2_status' => 'stopped']);
+                
+                Log::info('PM2 app stopped', [
+                    'website_id' => $website->id,
+                    'app_name' => $appName
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Application stopped successfully'
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $result->errorOutput()
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to stop PM2 app', [
+                'website_id' => $website->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Restart PM2 application
+     */
+    public function restartApp(Website $website): array
+    {
+        try {
+            if ($website->project_type !== 'node') {
+                return [
+                    'success' => false,
+                    'error' => 'Not a Node.js project'
+                ];
+            }
+
+            if ($this->isLocal) {
+                return [
+                    'success' => false,
+                    'error' => 'PM2 control not available in local mode'
+                ];
+            }
+
+            $appName = str_replace('.', '-', $website->domain);
+            $result = Process::run("pm2 restart {$appName} --update-env");
+
+            if ($result->successful()) {
+                Process::run("pm2 save");
+                
+                $website->update(['pm2_status' => 'running']);
+                
+                Log::info('PM2 app restarted', [
+                    'website_id' => $website->id,
+                    'app_name' => $appName
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Application restarted successfully'
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $result->errorOutput()
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to restart PM2 app', [
+                'website_id' => $website->id,
+                'error' => $e->getMessage()
+            ]);
+
+            $website->update(['pm2_status' => 'error']);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Get PM2 app status
      */
     public function getAppStatus(Website $website): array

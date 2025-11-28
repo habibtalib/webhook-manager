@@ -64,6 +64,14 @@ Route::middleware('auth')->group(function () {
         ->name('websites.toggle-ssl');
     Route::post('websites/{website}/redeploy', [WebsiteController::class, 'redeploy'])
         ->name('websites.redeploy');
+    
+    // PM2 Process Control (Node.js)
+    Route::post('websites/{website}/pm2-start', [WebsiteController::class, 'pm2Start'])
+        ->name('websites.pm2-start');
+    Route::post('websites/{website}/pm2-stop', [WebsiteController::class, 'pm2Stop'])
+        ->name('websites.pm2-stop');
+    Route::post('websites/{website}/pm2-restart', [WebsiteController::class, 'pm2Restart'])
+        ->name('websites.pm2-restart');
 });
 
 // Webhook Handler (API endpoint for Git providers - No Auth Required)

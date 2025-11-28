@@ -124,6 +124,22 @@
                         </div>
                     </div>
 
+                    @if($website->project_type === 'node')
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <strong>PM2 Status:</strong>
+                            </div>
+                            <div class="col-md-8">
+                                <span class="badge bg-{{ $website->pm2_status_badge }}">
+                                    {{ ucfirst($website->pm2_status) }}
+                                </span>
+                                @if(config('app.env') === 'local')
+                                    <small class="text-muted ms-2">(Control via webhook post-deploy)</small>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
                     <hr class="my-4">
 
                     <!-- Path Configuration -->
@@ -199,6 +215,62 @@
                     </div>
                 </div>
             </div>
+
+            @if($website->project_type === 'node' && config('app.env') !== 'local')
+                <!-- PM2 Process Control -->
+                <div class="card mt-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-hdd-rack me-2"></i>PM2 Process Control
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>Application:</strong> <code>{{ str_replace('.', '-', $website->domain) }}</code>
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Config:</strong> <code>/etc/pm2/ecosystem.{{ str_replace('.', '-', $website->domain) }}.config.js</code>
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Current Status:</strong>
+                                    <span class="badge bg-{{ $website->pm2_status_badge }} ms-2">
+                                        {{ ucfirst($website->pm2_status) }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div class="btn-group" role="group">
+                                    <form action="{{ route('websites.pm2-start', $website) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-success" title="Start or restart PM2 application">
+                                            <i class="bi bi-play-circle me-1"></i> Start
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('websites.pm2-restart', $website) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-warning" title="Restart PM2 application">
+                                            <i class="bi bi-arrow-clockwise me-1"></i> Restart
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('websites.pm2-stop', $website) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-danger" title="Stop PM2 application">
+                                            <i class="bi bi-stop-circle me-1"></i> Stop
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="my-3">
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Note:</strong> These controls manage the PM2 process directly. For automated deployment, configure the post-deploy script in your webhook settings.
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 

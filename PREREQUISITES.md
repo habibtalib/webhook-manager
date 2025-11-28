@@ -218,7 +218,67 @@ nvm list
 
 # Install PM2 globally for process management
 npm install -g pm2
+
+# Setup PM2 to start on system boot
+pm2 startup
+
+# Follow the command output instructions to enable PM2 on boot
 ```
+
+### PM2 Configuration (Node.js Process Manager)
+
+PM2 is used to manage Node.js applications. The system automatically generates PM2 ecosystem configuration files.
+
+**PM2 Log Directory:**
+
+```bash
+# Create PM2 log directory
+sudo mkdir -p /var/log/pm2
+sudo chown -R www-data:www-data /var/log/pm2
+sudo chmod -R 755 /var/log/pm2
+```
+
+**PM2 Basic Commands:**
+
+```bash
+# Start an application
+pm2 start /etc/pm2/ecosystem.app-name.config.js
+
+# List all running applications
+pm2 list
+
+# Stop an application
+pm2 stop app-name
+
+# Restart an application
+pm2 restart app-name
+
+# View logs
+pm2 logs app-name
+
+# Monitor applications
+pm2 monit
+
+# Save PM2 process list
+pm2 save
+
+# Resurrect saved processes after reboot
+pm2 resurrect
+```
+
+**Generated Ecosystem Files:**
+
+The system automatically creates PM2 ecosystem configuration files at:
+- **Production**: `/etc/pm2/ecosystem.{domain}.config.js`
+- **Local/Dev**: `storage/server/pm2/ecosystem.{domain}.config.js`
+
+These files include:
+- Node.js version configuration
+- Environment variables (PORT, NODE_ENV)
+- Cluster mode settings
+- Auto-restart configuration
+- Log file paths
+- Memory limits
 
 ### Redis Installation
 
@@ -422,6 +482,13 @@ www-data ALL=(ALL) NOPASSWD: /bin/cp /tmp/* /etc/pm2/*
 www-data ALL=(ALL) NOPASSWD: /bin/chmod 644 /etc/pm2/*
 www-data ALL=(ALL) NOPASSWD: /bin/rm -f /etc/pm2/*
 
+# PM2 Process Control (Node.js)
+www-data ALL=(ALL) NOPASSWD: /usr/bin/pm2 start *
+www-data ALL=(ALL) NOPASSWD: /usr/bin/pm2 stop *
+www-data ALL=(ALL) NOPASSWD: /usr/bin/pm2 restart *
+www-data ALL=(ALL) NOPASSWD: /usr/bin/pm2 save
+www-data ALL=(ALL) NOPASSWD: /usr/bin/pm2 jlist
+
 # Git Webhook Deployments - Run as deployment users
 www-data ALL=(ALL) NOPASSWD: /usr/bin/git
 www-data ALL=(ALL) NOPASSWD: /bin/bash
@@ -438,8 +505,9 @@ sudo chmod 0440 /etc/sudoers.d/git-webhook-manager
 2. Manage PHP-FPM pools for PHP projects
 3. Create and manage webroot directories in `/var/www/`
 4. Manage PM2 ecosystem configurations for Node.js projects
-5. Execute git deployments as specified deployment users
-6. Run deployment scripts (pre/post deploy hooks)
+5. Control PM2 processes (start, stop, restart Node.js applications)
+6. Execute git deployments as specified deployment users
+7. Run deployment scripts (pre/post deploy hooks)
 
 Ensure your application has proper authentication and authorization to prevent unauthorized access.
 

@@ -52,6 +52,7 @@ A comprehensive Laravel-based webhook management system for automated Git deploy
 - Nginx >= 1.18
 - PHP-FPM (multiple versions: 7.4, 8.0, 8.1, 8.2, 8.3)
 - Node.js (multiple versions: 16.x, 18.x, 20.x, 21.x)
+- PM2 (for Node.js process management)
 - Redis >= 6.0
 - Certbot (for SSL certificates)
 - Proper sudo permissions (see [PREREQUISITES.md](PREREQUISITES.md))
@@ -223,6 +224,93 @@ php artisan serve
    - Error messages (if failed)
    - Execution time
 
+### Managing Websites (Virtual Hosts)
+
+#### Creating a PHP Website
+
+1. Navigate to **Websites** → **PHP Projects** → **Add PHP Website**
+2. Fill in website details:
+   - **Name:** Project identifier
+   - **Domain:** e.g., `example.com`
+   - **Root Path:** e.g., `/var/www/example_com`
+   - **Working Directory:** e.g., `/public` (Laravel), `/public_html` (other)
+   - **PHP Version:** Select from 7.4 to 8.3
+   - **PHP Pool Name:** Custom FPM pool name (optional)
+   - **SSL Enabled:** Check for HTTPS support
+
+3. System automatically generates:
+   - Nginx virtual host configuration
+   - PHP-FPM pool configuration
+   - Webroot directory (in local mode)
+   - Sample index.html (in local mode)
+
+#### Creating a Node.js Website
+
+1. Navigate to **Websites** → **Node Projects** → **Add Node Website**
+2. Fill in website details:
+   - **Name:** Project identifier
+   - **Domain:** e.g., `api.example.com`
+   - **Root Path:** e.g., `/var/www/api_example_com`
+   - **Node Version:** Select from 16.x to 21.x
+   - **Port:** Application port (e.g., `3000`, `8080`)
+   - **SSL Enabled:** Check for HTTPS support
+
+3. System automatically generates:
+   - Nginx reverse proxy configuration
+   - **PM2 ecosystem configuration file**
+   - Log directories
+
+#### Node.js Deployment Workflow with PM2
+
+**Complete workflow for Node.js applications:**
+
+1. **Add Website** → Generate Nginx + PM2 config
+2. **Setup Webhook** → Configure git deployment
+3. **Configure Post-Deploy Script:**
+
+```bash
+# Install dependencies
+npm install --production
+
+# Start or restart PM2 app (works for both first deploy and updates)
+pm2 restart api-example-com --update-env || pm2 start /etc/pm2/ecosystem.api-example-com.config.js
+
+# Save PM2 process list
+pm2 save
+```
+
+4. **Push to Git** → Webhook triggers:
+   - Git pulls code
+   - Runs post-deploy script
+   - PM2 starts/restarts application automatically
+
+**PM2 Generated Configuration:**
+
+The system creates PM2 ecosystem files with:
+- Node.js version from website settings
+- Application port configuration
+- Cluster mode (auto-scale based on CPU cores)
+- Auto-restart on failure
+- Memory limits (1GB)
+- Environment variables (NODE_ENV, PORT)
+- Log file paths
+
+**File Locations:**
+- **Production:** `/etc/pm2/ecosystem.{domain}.config.js`
+- **Local/Dev:** `storage/server/pm2/ecosystem.{domain}.config.js`
+
+**The Magic Command:**
+
+```bash
+pm2 restart {app-name} || pm2 start {config-path}
+```
+
+This single command handles both scenarios:
+- **First deployment:** App doesn't exist → PM2 starts it
+- **Subsequent deployments:** App exists → PM2 restarts it
+
+No need to change webhook scripts after first deployment!
+
 ## 📁 Project Structure
 
 ```
@@ -230,22 +318,33 @@ app/
 ├── Http/Controllers/
 │   ├── DashboardController.php      # Dashboard & statistics
 │   ├── WebhookController.php        # Webhook CRUD operations
+│   ├── WebsiteController.php        # Website/vhost management
 │   ├── DeploymentController.php     # Deployment management
 │   └── WebhookHandlerController.php # Webhook API handler
 ├── Jobs/
-│   └── ProcessDeployment.php        # Async deployment job
+│   ├── ProcessDeployment.php        # Async deployment job
+│   └── DeployNginxConfig.php        # Async Nginx/PHP-FPM deployment
 ├── Models/
 │   ├── Webhook.php                  # Webhook model
+│   ├── Website.php                  # Website/vhost model
 │   ├── SshKey.php                   # SSH key model
 │   └── Deployment.php               # Deployment model
 └── Services/
     ├── SshKeyService.php            # SSH key generation
-    └── DeploymentService.php        # Deployment logic
+    ├── DeploymentService.php        # Git deployment logic
+    ├── NginxService.php             # Nginx config generation
+    ├── PhpFpmService.php            # PHP-FPM pool management
+    └── Pm2Service.php               # PM2 ecosystem management
 
 resources/views/
 ├── layouts/
 │   └── app.blade.php                # Main Bootstrap 5 layout
 ├── dashboard.blade.php              # Dashboard view
+├── websites/                        # Website views
+│   ├── index.blade.php
+│   ├── create.blade.php
+│   ├── edit.blade.php
+│   └── show.blade.php
 ├── webhooks/                        # Webhook views
 │   ├── index.blade.php
 │   ├── create.blade.php
@@ -255,10 +354,17 @@ resources/views/
     ├── index.blade.php
     └── show.blade.php
 
-database/migrations/
-├── 2024_01_01_000001_create_webhooks_table.php
-├── 2024_01_01_000002_create_ssh_keys_table.php
-└── 2024_01_01_000003_create_deployments_table.php
+storage/server/                      # Local development configs
+├── nginx/
+│   └── sites-available/             # Generated Nginx configs
+├── php/{version}/
+│   └── pool.d/                      # Generated PHP-FPM pools
+├── pm2/                             # Generated PM2 ecosystems
+├── www/{domain}/                    # Webroot directories (local only)
+└── logs/                            # Application logs
+    ├── nginx/
+    ├── php*/
+    └── pm2/
 ```
 
 ## 🎯 Example Post-Deploy Scripts
@@ -278,9 +384,18 @@ npm run build
 ### Node.js Application:
 ```bash
 #!/bin/bash
+# Install dependencies
 npm install --production
+
+# Build if needed
 npm run build
-pm2 restart app
+
+# Start or restart PM2 app (handles both first deploy and updates)
+# Replace 'app-name' with your actual app name (domain with dashes)
+pm2 restart app-name --update-env || pm2 start /etc/pm2/ecosystem.app-name.config.js
+
+# Save PM2 process list
+pm2 save
 ```
 
 ### Static Website:
