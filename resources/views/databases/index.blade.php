@@ -144,7 +144,7 @@
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="{{ route('databases.show', $database) }}" class="btn btn-outline-primary" title="View">
-                                                <i class="bi bi-eye"></i>
+                                                <i class="bi bi-search"></i>
                                             </a>
                                             <a href="{{ route('databases.change-password', $database) }}" class="btn btn-outline-warning" title="Change Password">
                                                 <i class="bi bi-key"></i>

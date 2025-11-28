@@ -8,6 +8,7 @@ A comprehensive Laravel-based webhook management system for automated Git deploy
 
 ## ✨ Features
 
+### 🚀 Git Webhook Management
 - 🎯 **Multi-Provider Support** - Works with GitHub and GitLab
 - 🔐 **Auto SSH Key Generation** - Unique SSH key pairs for each webhook
 - 👤 **Deploy User Control** - Execute deployments as specific system users
@@ -16,12 +17,29 @@ A comprehensive Laravel-based webhook management system for automated Git deploy
 - 📝 **Deployment History** - Track all deployments with detailed logs
 - 🔒 **Webhook Verification** - Secure webhook signatures validation
 - ⚙️ **Pre/Post Deploy Scripts** - Run custom commands before and after deployment
-- 🚦 **Queue System** - Asynchronous deployment processing
+
+### 🌐 Virtual Host Management
+- 🏠 **Multi-Project Support** - Manage both PHP and Node.js projects
+- ⚡ **Auto Nginx Configuration** - Automatic vhost generation and deployment
+- 🔒 **SSL/TLS Support** - Automated Let's Encrypt SSL certificate management with TLS 1.2/1.3
+- 🛡️ **Security Hardened** - Auto-applied security headers, HSTS, file protection, and hardened SSL
+- 🔄 **Version Management** - Support for multiple PHP (7.4-8.3) and Node.js (16.x-21.x) versions
+- 🎯 **Background Processing** - Queue-based Nginx deployment and SSL requests
+- 📊 **Status Tracking** - Real-time Nginx and SSL status monitoring
+- 🔧 **Easy Configuration** - Simple web interface for website management
+- ⚡ **Performance Optimized** - Static caching, gzip compression, optimized buffers
+
+### 🎨 General Features
+- 🚦 **Queue System** - Asynchronous deployment and configuration processing
 - 📱 **Responsive Design** - Works on all devices
 - 🎨 **PSR-Compliant Code** - Clean, maintainable codebase
+- 🔐 **Secure by Design** - Proper permission management and validation
 
 ## 📋 Requirements
 
+> **⚠️ Important**: For complete system requirements and installation instructions for Nginx, PHP, Redis, and other dependencies, please see **[PREREQUISITES.md](PREREQUISITES.md)**.
+
+### Minimum Requirements
 - PHP >= 8.2
 - Composer
 - Laravel 12.x
@@ -29,6 +47,14 @@ A comprehensive Laravel-based webhook management system for automated Git deploy
 - Git
 - SSH (ssh-keygen command)
 - Queue worker (for background processing)
+
+### Additional Requirements for Virtual Host Management
+- Nginx >= 1.18
+- PHP-FPM (multiple versions: 7.4, 8.0, 8.1, 8.2, 8.3)
+- Node.js (multiple versions: 16.x, 18.x, 20.x, 21.x)
+- Redis >= 6.0
+- Certbot (for SSL certificates)
+- Proper sudo permissions (see [PREREQUISITES.md](PREREQUISITES.md))
 
 ## 🔧 Installation
 
@@ -53,6 +79,11 @@ cp .env.example .env
 # Generate application key
 php artisan key:generate
 
+# Configure your environment
+# For local development, keep APP_ENV=local
+# This will write configs to storage/server/ instead of /etc/
+APP_ENV=local
+
 # Configure your database in .env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -61,8 +92,16 @@ DB_DATABASE=git_webhook
 DB_USERNAME=root
 DB_PASSWORD=
 
-# Configure queue connection (database recommended)
-QUEUE_CONNECTION=database
+# Configure queue connection
+# Redis recommended for production (better performance)
+# Database acceptable for local development (simpler setup)
+QUEUE_CONNECTION=redis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+# Alternative for local dev (if Redis not available):
+# QUEUE_CONNECTION=database
 ```
 
 ### 3. Database Migration

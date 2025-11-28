@@ -126,7 +126,7 @@
                                             </td>
                                             <td>
                                                 <a href="{{ route('webhooks.show', $webhook) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i>
+                                                    <i class="bi bi-search"></i>
                                                 </a>
                                             </td>
                                         </tr>

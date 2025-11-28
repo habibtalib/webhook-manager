@@ -7,6 +7,7 @@ use App\Http\Controllers\DeploymentController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\WebhookHandlerController;
+use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
 // Authentication Routes
@@ -56,6 +57,13 @@ Route::middleware('auth')->group(function () {
     Route::post('queues/failed-job/{uuid}/retry', [QueueController::class, 'retryFailedJob'])->name('queues.retry-failed-job');
     Route::post('queues/retry-all-failed', [QueueController::class, 'retryAllFailed'])->name('queues.retry-all-failed');
     Route::delete('queues/clear-failed', [QueueController::class, 'clearFailed'])->name('queues.clear-failed');
+
+    // Website Management (Virtual Hosts)
+    Route::resource('websites', WebsiteController::class);
+    Route::post('websites/{website}/toggle-ssl', [WebsiteController::class, 'toggleSsl'])
+        ->name('websites.toggle-ssl');
+    Route::post('websites/{website}/redeploy', [WebsiteController::class, 'redeploy'])
+        ->name('websites.redeploy');
 });
 
 // Webhook Handler (API endpoint for Git providers - No Auth Required)

@@ -53,7 +53,7 @@
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="{{ route('queues.show-job', $job['id']) }}" class="btn btn-outline-primary" title="View Details">
-                                                <i class="bi bi-eye"></i>
+                                                <i class="bi bi-search"></i>
                                             </a>
                                             @if(config('queue.default') !== 'redis')
                                                 <form action="{{ route('queues.delete-job', $job['id']) }}" method="POST" style="display: inline;">

@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.3/dist/sweetalert2.min.css" rel="stylesheet">
     <!-- App Styles -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     
@@ -33,14 +35,17 @@
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
+            <a class="nav-link {{ request()->routeIs('websites.*') ? 'active' : '' }}" href="{{ route('websites.index') }}">
+                <i class="bi bi-globe me-2"></i> Websites
+            </a>
+            <a class="nav-link {{ request()->routeIs('databases.*') ? 'active' : '' }}" href="{{ route('databases.index') }}">
+                <i class="bi bi-database me-2"></i> Databases
+            </a>
             <a class="nav-link {{ request()->routeIs('webhooks.*') ? 'active' : '' }}" href="{{ route('webhooks.index') }}">
                 <i class="bi bi-hdd-network me-2"></i> Webhooks
             </a>
             <a class="nav-link {{ request()->routeIs('deployments.*') ? 'active' : '' }}" href="{{ route('deployments.index') }}">
                 <i class="bi bi-cloud-haze2 me-2"></i> Deployments
-            </a>
-            <a class="nav-link {{ request()->routeIs('databases.*') ? 'active' : '' }}" href="{{ route('databases.index') }}">
-                <i class="bi bi-database me-2"></i> Databases
             </a>
             <a class="nav-link {{ request()->routeIs('queues.*') ? 'active' : '' }}" href="{{ route('queues.index') }}">
                 <i class="bi bi-calendar2-check me-2"></i> Queues
@@ -79,7 +84,7 @@
 
         <!-- Alerts -->
         @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-success alert-dismissible fade show auto-hide-alert" role="alert">
                 <i class="bi bi-check-circle me-2"></i>
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -113,6 +118,8 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.3/dist/sweetalert2.all.min.js"></script>
     
     <script>
         // Copy to clipboard function
@@ -131,9 +138,33 @@
             });
         }
         
-        // Confirm delete
+        // Confirm delete with SweetAlert2
         function confirmDelete(message) {
-            return confirm(message || 'Are you sure you want to delete this item?');
+            return Swal.fire({
+                title: 'Are you sure?',
+                text: message || 'You won\'t be able to revert this!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => result.isConfirmed);
+        }
+        
+        // Confirm action with SweetAlert2
+        async function confirmAction(title, message, confirmText = 'Yes, proceed!', icon = 'question') {
+            const result = await Swal.fire({
+                title: title,
+                text: message,
+                icon: icon,
+                showCancelButton: true,
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Cancel'
+            });
+            return result.isConfirmed;
         }
         
         // Mobile menu toggle
@@ -173,6 +204,24 @@
                 if (window.innerWidth > 992) {
                     closeMenu();
                 }
+            });
+        });
+        
+        // Auto-hide success alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const autoHideAlerts = document.querySelectorAll('.auto-hide-alert');
+            
+            autoHideAlerts.forEach(function(alert) {
+                // Show with animation
+                setTimeout(function() {
+                    // Start fade out
+                    alert.classList.remove('show');
+                    
+                    // Remove from DOM after fade animation completes
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 150); // Bootstrap fade transition time
+                }, 5000); // 5 seconds
             });
         });
     </script>

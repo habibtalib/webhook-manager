@@ -1,0 +1,93 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Models\Website;
+use App\Services\NginxService;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
+
+class RequestSslCertificate implements ShouldQueue
+{
+    use Queueable;
+
+    public $tries = 2;
+    public $timeout = 300; // SSL can take a while
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(
+        public Website $website
+    ) {}
+
+    /**
+     * Execute the job.
+     */
+    public function handle(NginxService $nginxService): void
+    {
+        Log::info('Starting SSL certificate request', [
+            'website_id' => $this->website->id,
+            'domain' => $this->website->domain
+        ]);
+
+        try {
+            // Update status to pending
+            $this->website->update([
+                'ssl_status' => 'pending'
+            ]);
+
+            // Request SSL certificate
+            $result = $nginxService->requestSslCertificate($this->website);
+
+            if ($result['success']) {
+                Log::info('SSL certificate installed successfully', [
+                    'website_id' => $this->website->id,
+                    'domain' => $this->website->domain
+                ]);
+
+                // Update website status
+                $this->website->update([
+                    'ssl_status' => 'active',
+                    'ssl_enabled' => true
+                ]);
+
+                // Redeploy Nginx config with SSL
+                dispatch(new DeployNginxConfig($this->website));
+            } else {
+                throw new \Exception($result['error'] ?? 'Unknown error');
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to request SSL certificate', [
+                'website_id' => $this->website->id,
+                'domain' => $this->website->domain,
+                'error' => $e->getMessage()
+            ]);
+
+            // Update website status
+            $this->website->update([
+                'ssl_status' => 'failed',
+                'ssl_enabled' => false
+            ]);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('RequestSslCertificate job failed', [
+            'website_id' => $this->website->id,
+            'error' => $exception->getMessage()
+        ]);
+
+        $this->website->update([
+            'ssl_status' => 'failed',
+            'ssl_enabled' => false
+        ]);
+    }
+}

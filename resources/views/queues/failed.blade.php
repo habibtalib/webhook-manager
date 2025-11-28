@@ -66,7 +66,7 @@
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="{{ route('queues.show-failed-job', $job['uuid']) }}" class="btn btn-outline-primary" title="View Details">
-                                                <i class="bi bi-eye"></i>
+                                                <i class="bi bi-search"></i>
                                             </a>
                                             <form action="{{ route('queues.retry-failed-job', $job['uuid']) }}" method="POST" style="display: inline;">
                                                 @csrf

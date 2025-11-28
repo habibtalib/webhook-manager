@@ -82,7 +82,7 @@
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="{{ route('webhooks.show', $webhook) }}" class="btn btn-outline-primary" title="View">
-                                                <i class="bi bi-eye"></i>
+                                                <i class="bi bi-search"></i>
                                             </a>
                                             <a href="{{ route('webhooks.edit', $webhook) }}" class="btn btn-outline-secondary" title="Edit">
                                                 <i class="bi bi-pencil"></i>
