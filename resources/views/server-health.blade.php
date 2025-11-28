@@ -8,7 +8,24 @@
     @if($latestMetric)
         <!-- System Monitoring Cards -->
         <div class="row mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <div class="card stat-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1">CPU Cores</p>
+                                <h3 class="mb-0">{{ $cpuCores }}</h3>
+                                <small class="text-muted">Physical Cores</small>
+                            </div>
+                            <div class="text-primary" style="font-size: 2.5rem;">
+                                <i class="bi bi-cpu"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
                 <div class="card stat-card h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -18,14 +35,14 @@
                                 <small class="text-muted">&nbsp;</small>
                             </div>
                             <div class="text-{{ $latestMetric->cpu_usage > 80 ? 'danger' : ($latestMetric->cpu_usage > 60 ? 'warning' : 'success') }}" style="font-size: 2.5rem;">
-                                <i class="bi bi-cpu"></i>
+                                <i class="bi bi-cpu-fill"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card stat-card h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -44,7 +61,7 @@
                 </div>
             </div>
             
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card stat-card h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">

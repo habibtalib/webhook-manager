@@ -39,6 +39,32 @@ class SystemMonitorService
     }
 
     /**
+     * Get CPU core count.
+     */
+    public function getCpuCores(): int
+    {
+        try {
+            if (PHP_OS_FAMILY === 'Darwin') {
+                // macOS
+                $result = Process::run(['sysctl', '-n', 'hw.ncpu']);
+                if ($result->successful()) {
+                    return (int) trim($result->output());
+                }
+            } else {
+                // Linux
+                $result = Process::run(['nproc']);
+                if ($result->successful()) {
+                    return (int) trim($result->output());
+                }
+            }
+        } catch (\Exception $e) {
+            logger()->error('Failed to get CPU cores: ' . $e->getMessage());
+        }
+
+        return 1;
+    }
+
+    /**
      * Get CPU usage percentage.
      */
     protected function getCpuUsage(): float
