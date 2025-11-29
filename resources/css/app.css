@@ -229,11 +229,6 @@ canvas {
         justify-content: center;
     }
     
-    /* Hide user info on mobile */
-    .user-info {
-        display: none;
-    }
-    
     .main-content {
         margin-left: 0;
         padding: 5rem 1.5rem 1.5rem;
