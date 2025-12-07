@@ -1,6 +1,6 @@
 # 🚀 Git Webhook Manager
 
-A comprehensive Laravel-based webhook management system for automated Git deployments from GitHub and GitLab. This application allows you to configure webhooks, manage SSH keys, and automate your deployment workflow with a beautiful Bootstrap 5 interface.
+A simple self-managed server panel built with Laravel for automating Git deployments and managing your web server. Deploy websites from GitHub/GitLab, configure Nginx virtual hosts, monitor system health, manage SSL certificates, set up alerts, control your firewall, and more—all through a clean, modern web interface.
 
 ![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=flat-square&logo=laravel)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php)
