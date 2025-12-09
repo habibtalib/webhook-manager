@@ -43,23 +43,7 @@
                             <h2 class="mb-0">{{ $statistics['pending_jobs'] }}</h2>
                         </div>
                         <div class="text-primary" style="font-size: 2.5rem;">
-                            <i class="bi bi-hourglass-split"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <div class="d-flex" style="flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important;">
-                        <div>
-                            <h6 class="text-muted mb-2">Failed Jobs</h6>
-                            <h2 class="mb-0">{{ $statistics['failed_jobs'] }}</h2>
-                        </div>
-                        <div class="text-danger" style="font-size: 2.5rem;">
-                            <i class="bi bi-x-circle"></i>
+                            <i class="bi bi-files"></i>
                         </div>
                     </div>
                 </div>
@@ -74,8 +58,24 @@
                             <h6 class="text-muted mb-2">Failed (24h)</h6>
                             <h2 class="mb-0">{{ $statistics['recent_failed'] }}</h2>
                         </div>
-                        <div class="text-warning" style="font-size: 2.5rem;">
-                            <i class="bi bi-exclamation-triangle"></i>
+                        <div class="text-primary" style="font-size: 2.5rem;">
+                            <i class="bi bi-file-x"></i>                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex" style="flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important;">
+                        <div>
+                            <h6 class="text-muted mb-2">Failed Jobs</h6>
+                            <h2 class="mb-0">{{ $statistics['failed_jobs'] }}</h2>
+                        </div>
+                        <div class="text-primary" style="font-size: 2.5rem;">
+                            <i class="bi bi-folder-x"></i>
                         </div>
                     </div>
                 </div>
@@ -90,7 +90,7 @@
                             <h6 class="text-muted mb-2">Queue Types</h6>
                             <h2 class="mb-0">{{ count($statistics['jobs_by_queue']) }}</h2>
                         </div>
-                        <div class="text-info" style="font-size: 2.5rem;">
+                        <div class="text-primary" style="font-size: 2.5rem;">
                             <i class="bi bi-layers"></i>
                         </div>
                     </div>
