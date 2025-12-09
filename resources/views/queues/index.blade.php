@@ -6,6 +6,7 @@
 
 @section('content')
     <!-- Queue Driver Info -->
+    @if(config('app.env') === 'local')
     <div class="alert alert-info alert-dismissible fade show" role="alert">
         <div class="d-flex justify-content-between align-items-center">
             <div>
@@ -19,18 +20,17 @@
                     <span class="badge bg-primary ms-2">Database</span>
                 @endif
             </div>
-            @if(config('app.env') === 'local')
-                <form action="{{ route('queues.dispatch-test') }}" method="POST" class="d-inline">
-                    @csrf
-                    <input type="hidden" name="count" value="10">
-                    <button type="submit" class="btn btn-sm btn-warning">
-                        <i class="bi bi-plus-circle me-1"></i>Dispatch 10 Test Jobs
-                    </button>
-                </form>
-            @endif
+            <form action="{{ route('queues.dispatch-test') }}" method="POST" class="d-inline">
+                @csrf
+                <input type="hidden" name="count" value="10">
+                <button type="submit" class="btn btn-sm btn-warning">
+                    <i class="bi bi-plus-circle me-1"></i>Dispatch 10 Test Jobs
+                </button>
+            </form>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    @endif
 
     <!-- Statistics Cards -->
     <div class="row mb-4" style="row-gap: 1rem;">
@@ -55,7 +55,7 @@
                 <div class="card-body">
                     <div class="d-flex" style="flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important;">
                         <div>
-                            <h6 class="text-muted mb-2">Failed (24h)</h6>
+                            <h6 class="text-muted mb-2">Failed Jobs (24h)</h6>
                             <h2 class="mb-0">{{ $statistics['recent_failed'] }}</h2>
                         </div>
                         <div class="text-primary" style="font-size: 2.5rem;">
@@ -71,7 +71,7 @@
                 <div class="card-body">
                     <div class="d-flex" style="flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important;">
                         <div>
-                            <h6 class="text-muted mb-2">Failed Jobs</h6>
+                            <h6 class="text-muted mb-2">Failed Jobs (Total)</h6>
                             <h2 class="mb-0">{{ $statistics['failed_jobs'] }}</h2>
                         </div>
                         <div class="text-primary" style="font-size: 2.5rem;">
@@ -101,7 +101,7 @@
 
     <!-- Recent Pending Jobs -->
     <div class="card mb-4">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">
                 <i class="bi bi-hourglass-split me-2"></i>Pending Jobs
             </h5>
@@ -160,7 +160,7 @@
 
     <!-- Recent Failed Jobs -->
     <div class="card">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">
                 <i class="bi bi-x-circle me-2"></i>Failed Jobs
             </h5>
