@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
 use Exception;
 
 class FileManagerService
@@ -34,21 +33,51 @@ class FileManagerService
         $this->validatePath($path);
 
         try {
-            // Get directory listing with details
-            $escapedPath = escapeshellarg($path);
-            $result = Process::run("ls -lAh {$escapedPath}");
-
-            if ($result->failed()) {
-                if (str_contains($result->errorOutput(), 'No such file or directory')) {
-                    throw new Exception("Directory not found: {$path}");
-                }
-                if (str_contains($result->errorOutput(), 'Permission denied')) {
-                    throw new Exception("Permission denied: {$path}");
-                }
-                throw new Exception("Failed to list directory: " . $result->errorOutput());
+            if (!File::isDirectory($path)) {
+                throw new Exception("Directory not found: {$path}");
             }
 
-            return $this->parseDirectoryListing($result->output(), $path);
+            if (!File::isReadable($path)) {
+                throw new Exception("Permission denied: {$path}");
+            }
+
+            $items = [];
+            $allFiles = array_merge(
+                File::directories($path),
+                File::files($path)
+            );
+
+            foreach ($allFiles as $file) {
+                $fullPath = $file instanceof \SplFileInfo ? $file->getPathname() : $file;
+                $stat = @stat($fullPath);
+                
+                if ($stat === false) {
+                    continue;
+                }
+
+                $items[] = [
+                    'name' => basename($fullPath),
+                    'path' => $fullPath,
+                    'type' => File::isDirectory($fullPath) ? 'directory' : 'file',
+                    'permissions' => substr(sprintf('%o', $stat['mode']), -4),
+                    'owner' => function_exists('posix_getpwuid') ? (posix_getpwuid($stat['uid'])['name'] ?? $stat['uid']) : $stat['uid'],
+                    'group' => function_exists('posix_getgrgid') ? (posix_getgrgid($stat['gid'])['name'] ?? $stat['gid']) : $stat['gid'],
+                    'size' => $this->formatBytes($stat['size']),
+                    'modified' => date('M d H:i', $stat['mtime']),
+                    'is_readable' => File::isReadable($fullPath),
+                    'is_writable' => File::isWritable($fullPath),
+                ];
+            }
+
+            // Sort: directories first, then files (both alphabetically)
+            usort($items, function($a, $b) {
+                if ($a['type'] !== $b['type']) {
+                    return $a['type'] === 'directory' ? -1 : 1;
+                }
+                return strcasecmp($a['name'], $b['name']);
+            });
+
+            return $items;
 
         } catch (Exception $e) {
             throw new Exception("Failed to list directory: " . $e->getMessage());
@@ -64,24 +93,25 @@ class FileManagerService
         $this->validatePath($path);
 
         try {
-            // Escape path for shell command
-            $escapedPath = escapeshellarg($path);
-            
-            // Check if file exists
-            $checkResult = Process::run("sudo test -f {$escapedPath}");
-
-            if ($checkResult->failed()) {
-                throw new Exception("File not found or not readable");
+            if (!File::exists($path)) {
+                throw new Exception("File not found");
             }
 
-            // Read file content with sudo (limit to 10MB for safety)
-            $result = Process::run("sudo head -c 10485760 {$escapedPath}");
-
-            if ($result->failed()) {
-                throw new Exception("Failed to read file: " . $result->errorOutput());
+            if (!File::isFile($path)) {
+                throw new Exception("Path is not a file");
             }
 
-            return $result->output();
+            if (!File::isReadable($path)) {
+                throw new Exception("File not readable");
+            }
+
+            // Limit file size to 10MB for safety
+            $filesize = File::size($path);
+            if ($filesize > 10485760) {
+                throw new Exception("File too large (max 10MB)");
+            }
+
+            return File::get($path);
 
         } catch (Exception $e) {
             throw new Exception("Failed to read file: " . $e->getMessage());
@@ -97,28 +127,22 @@ class FileManagerService
         $this->validatePath($path);
 
         try {
-            // Create temporary file with content
-            $tempFile = '/tmp/fm_' . uniqid() . '.tmp';
-            $escapedTempFile = escapeshellarg($tempFile);
-            $escapedPath = escapeshellarg($path);
-            
-            // Write content to temp file (escape content properly)
-            $escapedContent = base64_encode($content);
-            $writeResult = Process::run("echo '{$escapedContent}' | base64 -d > {$escapedTempFile}");
-
-            if ($writeResult->failed()) {
-                throw new Exception("Failed to create temp file");
+            // Check if directory exists, if not create it
+            $directory = dirname($path);
+            if (!File::isDirectory($directory)) {
+                File::makeDirectory($directory, 0755, true);
             }
 
-            // Move temp file to target with sudo
-            $moveResult = Process::run("sudo mv {$escapedTempFile} {$escapedPath}");
-            
-            if ($moveResult->failed()) {
-                throw new Exception("Failed to move file: " . $moveResult->errorOutput());
+            // Check if we can write (either file doesn't exist or is writable)
+            if (File::exists($path) && !File::isWritable($path)) {
+                throw new Exception("File is not writable");
             }
-            
-            // Set readable permissions for created files
-            Process::run("sudo chmod 644 {$escapedPath}");
+
+            // Write content
+            File::put($path, $content);
+
+            // Set permissions for new files
+            File::chmod($path, 0644);
 
             return true;
 
@@ -136,12 +160,14 @@ class FileManagerService
         $this->validatePath($path);
 
         try {
-            $escapedPath = escapeshellarg($path);
-            $command = $recursive ? "sudo rm -rf {$escapedPath}" : "sudo rm {$escapedPath}";
-            $result = Process::run($command);
+            if (!File::exists($path)) {
+                throw new Exception("File or directory not found");
+            }
 
-            if ($result->failed()) {
-                throw new Exception("Failed to delete: " . $result->errorOutput());
+            if (File::isDirectory($path)) {
+                File::deleteDirectory($path, $preserve = !$recursive);
+            } else {
+                File::delete($path);
             }
 
             return true;
@@ -160,20 +186,11 @@ class FileManagerService
         $this->validatePath($path);
 
         try {
-            $escapedPath = escapeshellarg($path);
-            
-            // Create directory with sudo
-            $result = Process::run("sudo mkdir -p {$escapedPath}");
-            
-            if ($result->failed()) {
-                throw new Exception("Failed to create directory: " . $result->errorOutput());
+            if (File::exists($path)) {
+                throw new Exception("Path already exists");
             }
 
-            // Verify directory exists
-            $checkResult = Process::run("sudo test -d {$escapedPath}");
-            if ($checkResult->failed()) {
-                throw new Exception("Directory was not created successfully");
-            }
+            File::makeDirectory($path, 0755, true);
 
             return true;
 
@@ -193,13 +210,15 @@ class FileManagerService
         $this->validatePath($newPath);
 
         try {
-            $escapedOldPath = escapeshellarg($oldPath);
-            $escapedNewPath = escapeshellarg($newPath);
-            $result = Process::run("sudo mv {$escapedOldPath} {$escapedNewPath}");
-
-            if ($result->failed()) {
-                throw new Exception("Failed to rename: " . $result->errorOutput());
+            if (!File::exists($oldPath)) {
+                throw new Exception("Source path not found");
             }
+
+            if (File::exists($newPath)) {
+                throw new Exception("Destination path already exists");
+            }
+
+            File::move($oldPath, $newPath);
 
             return true;
 
@@ -222,12 +241,14 @@ class FileManagerService
         }
 
         try {
-            $escapedPath = escapeshellarg($path);
-            $result = Process::run("sudo chmod {$permissions} {$escapedPath}");
-
-            if ($result->failed()) {
-                throw new Exception("Failed to change permissions: " . $result->errorOutput());
+            if (!File::exists($path)) {
+                throw new Exception("File not found");
             }
+
+            // Convert string octal to integer
+            $mode = octdec($permissions);
+            
+            File::chmod($path, $mode);
 
             return true;
 
@@ -244,22 +265,23 @@ class FileManagerService
         $path = $this->sanitizePath($path);
 
         try {
-            $escapedPath = escapeshellarg($path);
-            $result = Process::run("stat -c '%s|%a|%U|%G|%y' {$escapedPath}");
-            
-            if ($result->failed()) {
+            if (!File::exists($path)) {
                 throw new Exception("File not found");
             }
 
-            list($size, $perms, $owner, $group, $modified) = explode('|', trim($result->output()));
+            $stat = stat($path);
+            
+            if ($stat === false) {
+                throw new Exception("Failed to get file info");
+            }
 
             return [
                 'path' => $path,
-                'size' => (int) $size,
-                'permissions' => $perms,
-                'owner' => $owner,
-                'group' => $group,
-                'modified' => $modified,
+                'size' => File::size($path),
+                'permissions' => substr(sprintf('%o', $stat['mode']), -4),
+                'owner' => function_exists('posix_getpwuid') ? (posix_getpwuid($stat['uid'])['name'] ?? $stat['uid']) : $stat['uid'],
+                'group' => function_exists('posix_getgrgid') ? (posix_getgrgid($stat['gid'])['name'] ?? $stat['gid']) : $stat['gid'],
+                'modified' => date('Y-m-d H:i:s', File::lastModified($path)),
             ];
 
         } catch (Exception $e) {
@@ -281,63 +303,6 @@ class FileManagerService
     public function downloadFile(string $path): string
     {
         return $this->readFile($path);
-    }
-
-    /**
-     * Parse directory listing output
-     */
-    protected function parseDirectoryListing(string $output, string $currentPath): array
-    {
-        $lines = explode("\n", trim($output));
-        $items = [];
-
-        foreach ($lines as $line) {
-            // Skip total line and empty lines
-            if (empty($line) || str_starts_with($line, 'total')) {
-                continue;
-            }
-
-            // Parse ls output
-            if (preg_match('/^([drwxls-]+)\s+\d+\s+(\S+)\s+(\S+)\s+(\S+)\s+(\w+\s+\d+)\s+(\d{1,2}:\d{2}|\d{4})\s+(.+)$/', $line, $matches)) {
-                $permissions = $matches[1];
-                $owner = $matches[2];
-                $group = $matches[3];
-                $size = $matches[4];
-                $date = $matches[5];
-                $time = $matches[6];
-                $name = trim($matches[7]);
-
-                // Skip . and .. entries
-                if ($name === '.' || $name === '..') {
-                    continue;
-                }
-
-                $items[] = [
-                    'name' => $name,
-                    'path' => rtrim($currentPath, '/') . '/' . $name,
-                    'type' => $permissions[0] === 'd' ? 'directory' : 'file',
-                    'permissions' => $permissions,
-                    'owner' => $owner,
-                    'group' => $group,
-                    'size' => $size,
-                    'modified' => $date . ' ' . $time,
-                    'is_readable' => str_contains($permissions, 'r'),
-                    'is_writable' => str_contains($permissions, 'w'),
-                ];
-            }
-        }
-
-        // Sort: directories first, then files (both alphabetically)
-        usort($items, function($a, $b) {
-            // Directories before files
-            if ($a['type'] !== $b['type']) {
-                return $a['type'] === 'directory' ? -1 : 1;
-            }
-            // Alphabetically within same type
-            return strcasecmp($a['name'], $b['name']);
-        });
-
-        return $items;
     }
 
     /**
@@ -380,5 +345,23 @@ class FileManagerService
         if (!$isAllowed) {
             throw new Exception("Access denied: Path outside allowed locations");
         }
+    }
+
+    /**
+     * Format bytes to human readable format
+     */
+    protected function formatBytes(int $bytes, int $precision = 2): string
+    {
+        if ($bytes === 0) {
+            return '0 B';
+        }
+
+        $units = ['B', 'K', 'M', 'G', 'T'];
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+
+        $bytes /= pow(1024, $pow);
+
+        return round($bytes, $precision) . $units[$pow];
     }
 }
