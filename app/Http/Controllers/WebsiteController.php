@@ -118,10 +118,9 @@ class WebsiteController extends Controller
      */
     public function update(Request $request, Website $website)
     {
+        // Domain and root_path cannot be changed after creation
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'domain' => ['required', 'string', 'max:255', Rule::unique('websites')->ignore($website->id)],
-            'root_path' => ['required', 'string', 'max:500'],
             'working_directory' => ['nullable', 'string', 'max:500'],
             'project_type' => ['required', 'in:php,node'],
             'php_version' => ['nullable', 'string', 'max:10'],

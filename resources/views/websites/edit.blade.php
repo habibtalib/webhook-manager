@@ -51,20 +51,20 @@
 
                         <div class="mb-3">
                             <label for="domain" class="form-label">
-                                Domain Name <span class="text-danger">*</span>
+                                Domain Name
                             </label>
                             <input 
                                 type="text" 
-                                class="form-control font-monospace @error('domain') is-invalid @enderror" 
+                                class="form-control font-monospace" 
                                 id="domain" 
-                                name="domain" 
-                                value="{{ old('domain', $website->domain) }}" 
-                                required
-                                placeholder="example.com"
+                                value="{{ $website->domain }}" 
+                                readonly
+                                disabled
+                                style="background-color: #f8f9fa; cursor: not-allowed;"
                             >
-                            @error('domain')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle me-1"></i>Domain cannot be changed after creation. Delete and recreate if needed.
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -76,20 +76,20 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="root_path" class="form-label">
-                                Website Root Path <span class="text-danger">*</span>
+                                Website Root Path
                             </label>
                             <input 
                                 type="text" 
-                                class="form-control font-monospace @error('root_path') is-invalid @enderror" 
+                                class="form-control font-monospace" 
                                 id="root_path" 
-                                name="root_path" 
-                                value="{{ old('root_path', $website->root_path) }}" 
-                                required
-                                placeholder="/var/www/example_com"
+                                value="{{ $website->root_path }}" 
+                                readonly
+                                disabled
+                                style="background-color: #f8f9fa; cursor: not-allowed;"
                             >
-                            @error('root_path')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle me-1"></i>Root path cannot be changed after creation.
+                            </small>
                         </div>
 
                         @if($website->project_type === 'php')
@@ -437,30 +437,3 @@
     </div>
 @endsection
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const domainInput = document.getElementById('domain');
-    const rootPathInput = document.getElementById('root_path');
-
-    // Auto-generate root path from domain (only if root_path is empty)
-    domainInput.addEventListener('input', function() {
-        // Only auto-fill if root path is currently empty
-        if (rootPathInput.value === '') {
-            let domain = this.value.trim();
-            
-            if (domain) {
-                // Remove www. prefix if exists
-                domain = domain.replace(/^www\./, '');
-                
-                // Replace dots with underscores
-                const path = domain.replace(/\./g, '_');
-                
-                // Generate full path
-                rootPathInput.value = '/var/www/' + path;
-            }
-        }
-    });
-});
-</script>
-@endpush
