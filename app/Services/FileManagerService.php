@@ -42,13 +42,16 @@ class FileManagerService
             }
 
             $items = [];
-            $allFiles = array_merge(
-                File::directories($path),
-                File::files($path)
-            );
+            // Use scandir to include hidden files (starting with .)
+            $allFiles = scandir($path);
 
             foreach ($allFiles as $file) {
-                $fullPath = $file instanceof \SplFileInfo ? $file->getPathname() : $file;
+                // Skip . and ..
+                if ($file === '.' || $file === '..') {
+                    continue;
+                }
+
+                $fullPath = rtrim($path, '/') . '/' . $file;
                 $stat = @stat($fullPath);
                 
                 if ($stat === false) {
@@ -56,7 +59,7 @@ class FileManagerService
                 }
 
                 $items[] = [
-                    'name' => basename($fullPath),
+                    'name' => $file,
                     'path' => $fullPath,
                     'type' => File::isDirectory($fullPath) ? 'directory' : 'file',
                     'permissions' => substr(sprintf('%o', $stat['mode']), -4),
