@@ -141,8 +141,8 @@ $WEB_USER ALL=(ALL) NOPASSWD: /usr/bin/pm2
 $WEB_USER ALL=(ALL) NOPASSWD: /usr/local/bin/pm2
 
 # Supervisor - Process Manager
-$WEB_USER ALL=(ALL) NOPASSWD: /bin/cp /tmp/webhook-manager-*.conf /etc/supervisor/conf.d/
-$WEB_USER ALL=(ALL) NOPASSWD: /usr/bin/cp /tmp/webhook-manager-*.conf /etc/supervisor/conf.d/
+$WEB_USER ALL=(ALL) NOPASSWD: /bin/cp /tmp/webhook-manager-*.conf /etc/supervisor/conf.d/*.conf
+$WEB_USER ALL=(ALL) NOPASSWD: /usr/bin/cp /tmp/webhook-manager-*.conf /etc/supervisor/conf.d/*.conf
 $WEB_USER ALL=(ALL) NOPASSWD: /bin/rm -f /etc/supervisor/conf.d/*.conf
 $WEB_USER ALL=(ALL) NOPASSWD: /usr/bin/rm -f /etc/supervisor/conf.d/*.conf
 $WEB_USER ALL=(ALL) NOPASSWD: /bin/chmod 644 /etc/supervisor/conf.d/*.conf
