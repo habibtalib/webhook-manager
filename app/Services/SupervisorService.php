@@ -60,13 +60,13 @@ class SupervisorService
             File::put($tempFile, $config);
             
             // Copy to supervisor conf.d
-            $result = Process::run(['sudo', 'cp', $tempFile, $configPath]);
+            $result = Process::run(['/usr/bin/sudo', 'cp', $tempFile, $configPath]);
             if ($result->failed()) {
                 throw new Exception("Failed to copy config file: " . $result->errorOutput());
             }
             
             // Set permissions
-            Process::run(['sudo', 'chmod', '644', $configPath]);
+            Process::run(['/usr/bin/sudo', 'chmod', '644', $configPath]);
             
             // Clean up temp file
             File::delete($tempFile);
@@ -113,7 +113,7 @@ class SupervisorService
             $this->stopProgram($program->name);
             
             // Remove config file
-            $result = Process::run(['sudo', 'rm', '-f', $configPath]);
+            $result = Process::run(['/usr/bin/sudo', 'rm', '-f', $configPath]);
             if ($result->failed()) {
                 throw new Exception("Failed to remove config file: " . $result->errorOutput());
             }
@@ -154,13 +154,13 @@ class SupervisorService
     {
         try {
             // Run supervisorctl reread
-            $rereadResult = Process::run(['sudo', 'supervisorctl', 'reread']);
+            $rereadResult = Process::run(['/usr/bin/sudo', 'supervisorctl', 'reread']);
             if ($rereadResult->failed()) {
                 throw new Exception("supervisorctl reread failed: " . $rereadResult->errorOutput());
             }
             
             // Run supervisorctl update
-            $updateResult = Process::run(['sudo', 'supervisorctl', 'update']);
+            $updateResult = Process::run(['/usr/bin/sudo', 'supervisorctl', 'update']);
             if ($updateResult->failed()) {
                 throw new Exception("supervisorctl update failed: " . $updateResult->errorOutput());
             }
@@ -184,7 +184,7 @@ class SupervisorService
     public function startProgram(string $programName): array
     {
         try {
-            $result = Process::run(['sudo', 'supervisorctl', 'start', $programName . ':*']);
+            $result = Process::run(['/usr/bin/sudo', 'supervisorctl', 'start', $programName . ':*']);
             
             if ($result->failed()) {
                 throw new Exception($result->errorOutput());
@@ -210,7 +210,7 @@ class SupervisorService
     public function stopProgram(string $programName): array
     {
         try {
-            $result = Process::run(['sudo', 'supervisorctl', 'stop', $programName . ':*']);
+            $result = Process::run(['/usr/bin/sudo', 'supervisorctl', 'stop', $programName . ':*']);
             
             if ($result->failed()) {
                 throw new Exception($result->errorOutput());
@@ -236,7 +236,7 @@ class SupervisorService
     public function restartProgram(string $programName): array
     {
         try {
-            $result = Process::run(['sudo', 'supervisorctl', 'restart', $programName . ':*']);
+            $result = Process::run(['/usr/bin/sudo', 'supervisorctl', 'restart', $programName . ':*']);
             
             if ($result->failed()) {
                 throw new Exception($result->errorOutput());
@@ -262,7 +262,7 @@ class SupervisorService
     public function getProgramStatus(string $programName): array
     {
         try {
-            $result = Process::run(['sudo', 'supervisorctl', 'status', $programName . ':*']);
+            $result = Process::run(['/usr/bin/sudo', 'supervisorctl', 'status', $programName . ':*']);
             
             $output = $result->output();
             $processes = [];
@@ -302,7 +302,7 @@ class SupervisorService
     public function getAllPrograms(): array
     {
         try {
-            $result = Process::run(['sudo', 'supervisorctl', 'status']);
+            $result = Process::run(['/usr/bin/sudo', 'supervisorctl', 'status']);
             
             $output = $result->output();
             $programs = [];
@@ -358,7 +358,7 @@ class SupervisorService
                 return "Log file not found: {$logFile}";
             }
             
-            $result = Process::run(['sudo', 'tail', '-n', (string)$lines, $logFile]);
+            $result = Process::run(['/usr/bin/sudo', 'tail', '-n', (string)$lines, $logFile]);
             
             return $result->output();
             

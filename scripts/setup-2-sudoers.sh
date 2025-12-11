@@ -153,6 +153,7 @@ $WEB_USER ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl start *
 $WEB_USER ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl stop *
 $WEB_USER ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl restart *
 $WEB_USER ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl status
+$WEB_USER ALL=(ALL) NOPASSWD: /usr/bin/tail -n * /var/log/supervisor/*.log
 
 # Service Management (systemctl for Service Manager module)
 # Both /bin and /usr/bin paths for compatibility across distributions
