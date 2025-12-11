@@ -22,14 +22,22 @@ class ArtisanController extends Controller
     public function optimize()
     {
         try {
-            Artisan::call('optimize');
+            $exitCode = Artisan::call('optimize');
             $output = Artisan::output();
             
-            Log::info('Artisan optimize executed');
+            Log::info('Artisan optimize executed', [
+                'exit_code' => $exitCode,
+                'output' => $output
+            ]);
+            
+            $message = 'Application optimized successfully!';
+            if (!empty(trim($output))) {
+                $message .= ' Check output below for details.';
+            }
             
             return redirect()->route('artisan.index')
-                ->with('success', 'Application optimized successfully!')
-                ->with('output', $output);
+                ->with('success', $message)
+                ->with('output', $output ?: 'Command executed successfully with no output.');
                 
         } catch (\Exception $e) {
             Log::error('Artisan optimize failed', ['error' => $e->getMessage()]);
@@ -44,14 +52,17 @@ class ArtisanController extends Controller
     public function cacheClear()
     {
         try {
-            Artisan::call('cache:clear');
+            $exitCode = Artisan::call('cache:clear');
             $output = Artisan::output();
             
-            Log::info('Artisan cache:clear executed');
+            Log::info('Artisan cache:clear executed', [
+                'exit_code' => $exitCode,
+                'output' => $output
+            ]);
             
             return redirect()->route('artisan.index')
                 ->with('success', 'Application cache cleared successfully!')
-                ->with('output', $output);
+                ->with('output', $output ?: 'Cache cleared successfully.');
                 
         } catch (\Exception $e) {
             Log::error('Artisan cache:clear failed', ['error' => $e->getMessage()]);
@@ -66,14 +77,17 @@ class ArtisanController extends Controller
     public function configClear()
     {
         try {
-            Artisan::call('config:clear');
+            $exitCode = Artisan::call('config:clear');
             $output = Artisan::output();
             
-            Log::info('Artisan config:clear executed');
+            Log::info('Artisan config:clear executed', [
+                'exit_code' => $exitCode,
+                'output' => $output
+            ]);
             
             return redirect()->route('artisan.index')
                 ->with('success', 'Configuration cache cleared successfully!')
-                ->with('output', $output);
+                ->with('output', $output ?: 'Config cache cleared successfully.');
                 
         } catch (\Exception $e) {
             Log::error('Artisan config:clear failed', ['error' => $e->getMessage()]);
@@ -88,14 +102,17 @@ class ArtisanController extends Controller
     public function configCache()
     {
         try {
-            Artisan::call('config:cache');
+            $exitCode = Artisan::call('config:cache');
             $output = Artisan::output();
             
-            Log::info('Artisan config:cache executed');
+            Log::info('Artisan config:cache executed', [
+                'exit_code' => $exitCode,
+                'output' => $output
+            ]);
             
             return redirect()->route('artisan.index')
                 ->with('success', 'Configuration cached successfully!')
-                ->with('output', $output);
+                ->with('output', $output ?: 'Config cached successfully.');
                 
         } catch (\Exception $e) {
             Log::error('Artisan config:cache failed', ['error' => $e->getMessage()]);
@@ -110,14 +127,17 @@ class ArtisanController extends Controller
     public function routeClear()
     {
         try {
-            Artisan::call('route:clear');
+            $exitCode = Artisan::call('route:clear');
             $output = Artisan::output();
             
-            Log::info('Artisan route:clear executed');
+            Log::info('Artisan route:clear executed', [
+                'exit_code' => $exitCode,
+                'output' => $output
+            ]);
             
             return redirect()->route('artisan.index')
                 ->with('success', 'Route cache cleared successfully!')
-                ->with('output', $output);
+                ->with('output', $output ?: 'Route cache cleared successfully.');
                 
         } catch (\Exception $e) {
             Log::error('Artisan route:clear failed', ['error' => $e->getMessage()]);
@@ -132,14 +152,17 @@ class ArtisanController extends Controller
     public function routeCache()
     {
         try {
-            Artisan::call('route:cache');
+            $exitCode = Artisan::call('route:cache');
             $output = Artisan::output();
             
-            Log::info('Artisan route:cache executed');
+            Log::info('Artisan route:cache executed', [
+                'exit_code' => $exitCode,
+                'output' => $output
+            ]);
             
             return redirect()->route('artisan.index')
                 ->with('success', 'Routes cached successfully!')
-                ->with('output', $output);
+                ->with('output', $output ?: 'Routes cached successfully.');
                 
         } catch (\Exception $e) {
             Log::error('Artisan route:cache failed', ['error' => $e->getMessage()]);
@@ -154,14 +177,17 @@ class ArtisanController extends Controller
     public function viewClear()
     {
         try {
-            Artisan::call('view:clear');
+            $exitCode = Artisan::call('view:clear');
             $output = Artisan::output();
             
-            Log::info('Artisan view:clear executed');
+            Log::info('Artisan view:clear executed', [
+                'exit_code' => $exitCode,
+                'output' => $output
+            ]);
             
             return redirect()->route('artisan.index')
                 ->with('success', 'Compiled views cleared successfully!')
-                ->with('output', $output);
+                ->with('output', $output ?: 'View cache cleared successfully.');
                 
         } catch (\Exception $e) {
             Log::error('Artisan view:clear failed', ['error' => $e->getMessage()]);
@@ -176,14 +202,17 @@ class ArtisanController extends Controller
     public function viewCache()
     {
         try {
-            Artisan::call('view:cache');
+            $exitCode = Artisan::call('view:cache');
             $output = Artisan::output();
             
-            Log::info('Artisan view:cache executed');
+            Log::info('Artisan view:cache executed', [
+                'exit_code' => $exitCode,
+                'output' => $output
+            ]);
             
             return redirect()->route('artisan.index')
                 ->with('success', 'Views cached successfully!')
-                ->with('output', $output);
+                ->with('output', $output ?: 'Views cached successfully.');
                 
         } catch (\Exception $e) {
             Log::error('Artisan view:cache failed', ['error' => $e->getMessage()]);
@@ -207,8 +236,9 @@ class ArtisanController extends Controller
 
             $outputs = [];
             foreach ($commands as $command) {
-                Artisan::call($command);
-                $outputs[] = $command . ': ' . trim(Artisan::output());
+                $exitCode = Artisan::call($command);
+                $output = trim(Artisan::output());
+                $outputs[] = $command . ': ' . ($output ?: 'Success');
             }
             
             Log::info('Artisan clear all executed');
@@ -239,8 +269,9 @@ class ArtisanController extends Controller
 
             $outputs = [];
             foreach ($commands as $command) {
-                Artisan::call($command);
-                $outputs[] = $command . ': ' . trim(Artisan::output());
+                $exitCode = Artisan::call($command);
+                $output = trim(Artisan::output());
+                $outputs[] = $command . ': ' . ($output ?: 'Success');
             }
             
             Log::info('Artisan optimize production executed');
