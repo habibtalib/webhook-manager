@@ -117,7 +117,7 @@
                                         <a href="{{ route('supervisor.edit', $program) }}" class="btn btn-outline-secondary" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="{{ route('supervisor.destroy', $program) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this program?');">
+                                        <form action="{{ route('supervisor.destroy', $program) }}" method="POST" style="display: contents;" onsubmit="return confirm('Are you sure you want to delete this program?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-outline-danger" title="Delete">
