@@ -602,7 +602,7 @@ HTML;
                 ]);
             } else {
                 // Production mode: Use sudo
-                $result = Process::run("sudo ln -sf {$source} {$target}");
+                $result = Process::run("sudo /bin/ln -sf {$source} {$target}");
                 
                 if ($result->failed()) {
                     throw new \Exception("Failed to create symlink: " . $result->errorOutput());
