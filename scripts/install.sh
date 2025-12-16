@@ -891,5 +891,41 @@ main() {
     echo ""
 }
 
-# Run main function
-main
+# Parse command line arguments
+case "${1:-}" in
+    --phase1|--prerequisites)
+        check_root
+        install_prerequisites
+        ;;
+    --phase2|--sudoers)
+        check_root
+        configure_sudoers
+        ;;
+    --phase3|--app)
+        check_root
+        APP_DIR="${2:-/var/www/hostiqo}"
+        setup_application
+        ;;
+    --phase4|--webserver)
+        check_root
+        APP_DIR="${2:-/var/www/hostiqo}"
+        setup_webserver
+        ;;
+    --help|-h)
+        echo "Hostiqo Installer"
+        echo ""
+        echo "Usage: sudo bash install.sh [option]"
+        echo ""
+        echo "Options:"
+        echo "  (no option)      Run full installation"
+        echo "  --phase1         Install system prerequisites only"
+        echo "  --phase2         Configure sudoers only"
+        echo "  --phase3 [path]  Setup Laravel application only"
+        echo "  --phase4 [path]  Configure web server only"
+        echo "  --help           Show this help"
+        echo ""
+        ;;
+    *)
+        main
+        ;;
+esac
